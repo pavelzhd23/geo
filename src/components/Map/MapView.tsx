@@ -38,6 +38,9 @@ export default function MapView() {
   const selectionMode = useSelectionStore((s) => s.mode);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Подсказка о бесплатном доступе видна только если собственный ключ не задан
+  const [noteVisible, setNoteVisible] = useState(() => !hasYandexApiKey());
+
   const { load } = useOverpass();
 
   const handleBbox = useCallback(
@@ -59,15 +62,6 @@ export default function MapView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [selectionMode]);
 
-  // Нет ключа API — понятное сообщение вместо пустой карты
-  if (!hasYandexApiKey()) {
-    return (
-      <div className="map-wrap">
-        <div className="map-message">{t("map.noApiKey")}</div>
-      </div>
-    );
-  }
-
   return (
     <div className={`map-wrap ${selectionMode ? "map-wrap-selection" : ""}`}>
       <div ref={containerRef} className="ymap-container" />
@@ -80,6 +74,18 @@ export default function MapView() {
       )}
 
       {failed && <div className="map-message">{t("map.loadError")}</div>}
+
+      {noteVisible && !failed && (
+        <div className="map-note">
+          {t("map.freeTier")}
+          <button
+            className="btn btn-small btn-ghost"
+            onClick={() => setNoteVisible(false)}
+          >
+            {t("map.noteClose")}
+          </button>
+        </div>
+      )}
 
       <div className="map-controls">
         <SelectionMode />

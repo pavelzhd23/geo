@@ -1,6 +1,12 @@
 import type { YMapsNamespace } from "../types";
 
-/** API-ключ Яндекс Карт. Задайте в .env.local: VITE_YANDEX_MAPS_API_KEY */
+/**
+ * API-ключ Яндекс Карт (необязателен).
+ * По умолчанию карта работает на бесплатном «открытом» доступе JavaScript API 2.1 —
+ * без ключа, с суточным лимитом ~50 000 запросов на IP (достаточно для личного инструмента).
+ * Если нужен собственный лимит/свой аккаунт — задайте ключ в .env.local:
+ * VITE_YANDEX_MAPS_API_KEY (сервис «Карточки и статическая карта», бесплатного тарифа достаточно).
+ */
 const API_KEY = import.meta.env.VITE_YANDEX_MAPS_API_KEY as string | undefined;
 
 /** Язык/регион карт по умолчанию. */
@@ -8,33 +14,34 @@ const DEFAULT_LOCALE = "ru_RU";
 
 /**
  * URL JavaScript API 2.x Яндекс Карт.
+ * Без параметра `apikey` API отдаёт карту по бесплатному открытому доступу.
  * Параметр `mode` (development / release / production) можно переопределить
  * через VITE_YANDEX_MAPS_MODE.
  */
 function buildScriptSrc(): string {
   const mode = (import.meta.env.VITE_YANDEX_MAPS_MODE as string | undefined) ?? "release";
+  const keyParam = API_KEY ? `&apikey=${encodeURIComponent(API_KEY)}` : "";
   return (
     `https://api-maps.yandex.ru/2.1/` +
-    `?apikey=${encodeURIComponent(API_KEY ?? "")}` +
-    `&lang=${DEFAULT_LOCALE.replace("_", "-")}` +
+    `?lang=${DEFAULT_LOCALE.replace("_", "-")}` +
+    `${keyParam}` +
     `&mode=${mode}`
   );
 }
 
 let readyPromise: Promise<YMapsNamespace> | null = null;
 
+/** Есть ли собственный ключ API (для informational-сообщений в UI). */
 export function hasYandexApiKey(): boolean {
   return Boolean(API_KEY);
 }
 
 /**
  * Однократно подключает скрипт Яндекс Карт и возвращает namespace `ymaps`
- * после события ready (промис кэшируется).
+ * после события ready (промис кэшируется). Ключ API не требуется —
+ * используется бесплатный открытый доступ.
  */
 export function getYMaps(): Promise<YMapsNamespace> {
-  if (!API_KEY) {
-    return Promise.reject(new Error("VITE_YANDEX_MAPS_API_KEY is not set"));
-  }
   if (readyPromise) return readyPromise;
 
   readyPromise = new Promise<YMapsNamespace>((resolve, reject) => {

@@ -13,10 +13,10 @@
 ## Запуск
 ```bash
 npm install
-
-# 1. Получите ключ JavaScript API на https://developer.tech.yandex.ru/services/3
-# 2. Создайте .env.local (скопировав .env.example) и впишите:
-#    VITE_YANDEX_MAPS_API_KEY=ваш_ключ
+# Ключ API Яндекс Карт НЕ нужен: карта работает на бесплатном открытом доступе
+# JavaScript API 2.1 (лимит ~50 000 запросов в сутки на IP — для личного инструмента за глаза).
+# При желании можно указать собственный ключ (бесплатный тариф «Карточки и статическая карта»,
+# https://developer.tech.yandex.ru/services/3) в .env.local: VITE_YANDEX_MAPS_API_KEY=...
 npm run dev          # отладка в браузере (in-memory хранилище)
 cargo install tauri-cli --locked   # один раз (нужен Rust)
 npm run tauri dev    # десктопный режим (SQLite: marks.db)
