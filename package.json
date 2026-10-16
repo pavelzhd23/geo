@@ -19,6 +19,7 @@
     "react": "^18",
     "react-dom": "^18",
     "react-i18next": "^13",
+    "react-leaflet": "^4.2.1",
     "zustand": "^4"
   },
   "devDependencies": {
