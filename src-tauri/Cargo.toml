@@ -4,45 +4,18 @@ version = "0.1.0"
 description = "Map Marker Editor — разметка OSM-мест"
 edition = "2021"
 
-# Для rustc < 1.85: запрещаем cargo выбирать транзитивные зависимости,
-# требующие resolver="3". На rustc >= 1.85 можно удалить эту строку.
-resolver = "1"
-
 [lib]
 name = "map_marker_editor_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "=2.0.5", features = [] }
+tauri-build = { version = "2", features = [] }
 
 [dependencies]
-# ВАЖНО: точные пины (=). Без них cargo подтянет свежие tauri 2.12/tauri-utils 2.10,
-# которые требуют toml 1.x (edition2024) и не собираются на rustc < 1.85.
-# Версии 2.2.8/2.0.6 были сняты (yanked) с crates.io — используются доступные.
-tauri = { version = "=2.2.5", features = [] }
-tauri-plugin-sql = { version = "=2.0.3", features = ["sqlite"] }
-tauri-utils = "=2.4.0"      # блокирует выборку tauri-utils >=2.7 (toml 0.9/1.x)
+# Версии совпадают с npm-пакетами (^2 → 2.12.x): Tauri CLI проверяет
+# соответствие major/minor crate и @tauri-apps/* и падает при рассинхроне.
+# Требуется rustc >= 1.85 (см. README).
+tauri = { version = "2", features = [] }
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-
-# --- Пины транзитивных зависимостей: сборка на rustc < 1.85 ---
-# Старый cargo не умеет читать манифесты пакетов с `edition = "2024"` и
-# `resolver = "3"` (serde_spanned 1.x, toml 1.x, getrandom 0.4+ и др.).
-# Эти пины фиксируют совместимые старые версии для всего дерева зависимостей.
-# На rustc >= 1.85 блок можно удалить целиком (или обновить Rust через rustup).
-getrandom = "=0.3.4"        # 0.4+ требует edition2024; 0.3.4 — rustc 1.63
-handlebars = "=6.3.2"
-plist = "=1.7.4"
-url = "=2.5.8"
-cssparser = "=0.35.0"
-serde_with = "=3.14.1"
-base64 = "=0.22.1"
-png = "=0.17.16"
-hashbrown = "=0.15.2"
-foldhash = "=0.1.4"
-quick-xml = "=0.37.0"
-cc = "=1.2.16"
-time = "=0.3.36"
-# toml/toml_edit/cargo_toml/webkit2gtk НЕ пинимся напрямую: tauri/tauri-utils 2.2.x
-# сами выбирают совместные версии (toml 0.8.x, webkit2gtk =2.0.1). Прямые пины
-# вызывали конфликты разрешения ("failed to select a version for ...").

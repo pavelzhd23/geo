@@ -18,18 +18,18 @@ npm install
 # При желании можно указать собственный ключ (бесплатный тариф «Карточки и статическая карта»,
 # https://developer.tech.yandex.ru/services/3) в .env.local: VITE_YANDEX_MAPS_API_KEY=...
 npm run dev          # отладка в браузере (in-memory хранилище)
-npm install -D @tauri-apps/cli@^2   # CLI через npm — не требует компиляции Rust
 npm run tauri dev    # десктопный режим (SQLite: marks.db)
-npm run tauri build  # сборка приложения
+npm run tauri build  # сборка приложения (.deb/.AppImage в src-tauri/target/release/bundle/)
 ```
 
 ### Требования к Rust для сборки десктопа
-`npm run tauri build` компилирует `src-tauri`. Рекомендуется **rustc >= 1.85**:
-свежие транзитивные crate-зависимости могут требовать Cargo `resolver = "3"`
-и `edition = "2024"`, которые старый rustc не понимает (ошибки вида
-`` `resolver` setting `3` is not valid `` / `feature edition2024 is required`).
+`npm run tauri dev/build` компилируют `src-tauri`. Требуется **rustc >= 1.85**
+(проверить: `rustc --version`). Crate-зависимости Tauri 2.12 используют
+`edition = "2024"` и `resolver = "3"`, которые старый cargo не понимает
+(ошибки вида `` `resolver` setting `3` is not valid `` /
+`feature edition2024 is required`).
 
-**Вариант A (рекомендуется) — установить rustup через официальный скрипт:**
+Установка/обновление Rust (официальный скрипт):
 
 ```bash
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -41,26 +41,15 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 rustup update stable
 ```
 
-После этого достаточно `npm run tauri build` (CLI берётся из dev-зависимости
-`@tauri-apps/cli` через npm — отдельно ставить его через cargo не нужно).
+Tauri CLI брать НЕ нужно отдельно — он уже в dev-зависимостях npm
+(`@tauri-apps/cli`), команды идут через `npm run tauri ...`.
+`cargo install tauri-cli` не используйте.
 
-**Вариант B — сборка на старом rustc (1.75+) без обновления Rust:**
-в `src-tauri/Cargo.toml` зафиксированы версии tauri 2.2.x и пины
-транзитивных зависимостей «до-edition2024» (включая `cargo_toml =0.21.0`,
-`toml =0.8.23`, `serde_with =3.14.0`, `webkit2gtk =2.0.2`). Удалите старый
-lock-файл и пересоберите:
-
-```bash
-rm -f src-tauri/Cargo.lock
-npm run tauri build
-```
-
-Если cargo всё же споткнётся о новый пакет (ошибки вида `feature edition2024
-is required` или `` `resolver` setting `3` is not valid ``), добавьте пин его
-старой совместимой версии в `[dependencies]` Cargo.toml — шаблон ошибки всегда
-показывает имя пакета и требуемый feature. Самый надёжный путь — закоммитить
-`Cargo.lock`, собранный на rustc >= 1.85 (Docker:
-`docker run --rm -v $PWD/src-tauri:/app -w /app rust:1.85 cargo generate-lockfile`).
+Версии Rust-crate (`tauri =2.12.x`, `tauri-plugin-sql =2.6.x`) синхронизированы
+с npm-пакетами (`@tauri-apps/api`, `@tauri-apps/plugin-sql`) — иначе CLI падает
+с ошибкой «Found version mismatched Tauri packages». `Cargo.lock` в репозитории
+фиксирует всё дерево зависимостей; если меняете версии — удалите его
+(`rm src-tauri/Cargo.lock`) и пересоберите.
 
 Для Linux также нужны системные зависимости WebKitGTK
 (`libwebkit2gtk-4.1-dev`, `build-essential`, `libssl-dev` и т.д. — полный
