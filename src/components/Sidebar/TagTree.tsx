@@ -3,16 +3,18 @@ import { useTranslation } from "react-i18next";
 import type { Tag } from "../../types";
 import { useTags } from "../../hooks/useTags";
 import { useFilterStore } from "../../stores/filterStore";
+import { useAutoclusterStore } from "../../stores/autoclusterStore";
 import { showToast } from "../../utils/toast";
 import TagNode from "./TagNode";
 import TagCreateDialog from "./TagCreateDialog";
 
-/** Левая панель: дерево тегов + управление фильтром. */
+/** Левая панель: автокластеризация + дерево тегов города + управление фильтром. */
 export default function TagTree() {
   const { t } = useTranslation();
   const { tags, createTag } = useTags();
   const activeTagId = useFilterStore((s) => s.activeTagId);
   const clearFilter = useFilterStore((s) => s.clear);
+  const openAutocluster = useAutoclusterStore((s) => s.open);
   const [creatingRoot, setCreatingRoot] = useState(false);
 
   const childrenByParent = useMemo(() => {
@@ -23,7 +25,9 @@ export default function TagTree() {
       list.push(tag);
       map.set(key, list);
     }
-    for (const list of map.values()) list.sort((a, b) => a.name.localeCompare(b.name, "ru"));
+    // обычные теги — по алфавиту, автокластеры («📍 …») — в конец списка
+    for (const list of map.values())
+      list.sort((a, b) => a.is_auto - b.is_auto || a.name.localeCompare(b.name, "ru"));
     return map;
   }, [tags]);
 
@@ -37,6 +41,11 @@ export default function TagTree() {
           {t("tags.create")} +
         </button>
       </div>
+
+      {/* Кнопка автокластеризации — над деревом тегов */}
+      <button className="btn btn-autocluster" onClick={openAutocluster}>
+        ⚙ {t("autocluster.button")}
+      </button>
 
       {activeTagId != null && (
         <button className="btn btn-reset" onClick={clearFilter}>

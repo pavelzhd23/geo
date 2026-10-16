@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Bbox } from "../types";
-import { fetchPOIWithCache, MAX_MARKERS } from "../services/overpass";
+import { fetchPOIWithCache, clearOverpassCache, MAX_MARKERS } from "../services/overpass";
 import { useMapStore } from "../stores/mapStore";
 import { showToast } from "../utils/toast";
 
@@ -47,5 +47,13 @@ export function useOverpass() {
     [setLoading, setPlaces, t]
   );
 
-  return { load, truncated };
+  /** Принудительная перезагрузка текущего bbox (при смене города). */
+  const reload = useCallback(async () => {
+    clearOverpassCache();
+    lastLoadedKey.current = null;
+    const bbox = useMapStore.getState().currentBbox;
+    if (bbox) await load(bbox);
+  }, [load]);
+
+  return { load, reload, truncated };
 }

@@ -1,7 +1,26 @@
 export interface Tag {
   id: number;
+  city_id: number;
   name: string;
   parent_id: number | null;
+  /** 1 — тег создан автокластеризацией */
+  is_auto: number;
+}
+
+export interface City {
+  id: number;
+  name: string;
+  center_lat: number;
+  center_lng: number;
+  default_zoom: number;
+}
+
+/** Данные для создания города (без id). */
+export interface NewCity {
+  name: string;
+  center_lat: number;
+  center_lng: number;
+  default_zoom: number;
 }
 
 export interface Place {
