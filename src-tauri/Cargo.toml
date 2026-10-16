@@ -17,8 +17,11 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "=2.0.5", features = [] }
 
 [dependencies]
-tauri = { version = "=2.2.8", features = [] }
-tauri-plugin-sql = { version = "=2.0.6", features = ["sqlite"] }
+# ВНИМАНИЕ: версии 2.2.8 и 2.0.6 были YANKED (сняты) с crates.io —
+# cargo больше не видит их ("candidate versions found which didn't match").
+# 2.2.5 / 2.0.3 — последние доступные версии той же линейки.
+tauri = { version = "=2.2.5", features = [] }
+tauri-plugin-sql = { version = "=2.0.3", features = ["sqlite"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
