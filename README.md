@@ -18,10 +18,29 @@ npm install
 # При желании можно указать собственный ключ (бесплатный тариф «Карточки и статическая карта»,
 # https://developer.tech.yandex.ru/services/3) в .env.local: VITE_YANDEX_MAPS_API_KEY=...
 npm run dev          # отладка в браузере (in-memory хранилище)
-cargo install tauri-cli --locked   # один раз (нужен Rust)
+npm install -D @tauri-apps/cli@^2   # CLI через npm — не требует компиляции Rust
 npm run tauri dev    # десктопный режим (SQLite: marks.db)
 npm run tauri build  # сборка приложения
 ```
+
+### Требования к Rust для сборки десктопа
+`npm run tauri build` компилирует `src-tauri` и требует **rustc >= 1.85** (свежие
+транзитивные crate-зависимости, например `cssparser-macros 0.7.x`, используют
+Cargo `resolver = "3"`, который rustc 1.75 не понимает — ошибка
+`` `resolver` setting `3` is not valid ``). Обновите Rust так:
+
+```bash
+rustup update stable            # или установите rustup: https://rustup.rs
+cd src-tauri && rustup show     # проверит rust-toolchain.toml и подтянет stable
+```
+
+В `src-tauri/rust-toolchain.toml` зафиксирован канал `stable` — при наличии
+rustup нужная версия выбирается автоматически. Если обновить Rust нельзя,
+можно собрать приложение на более старой связке Tauri (например,
+`cargo install tauri-cli --version "=2.2.5"` на rustc 1.75), но проще
+обновить тулчейн. Также для Linux нужны системные зависимости WebKitGTK
+(`libwebkit2gtk-4.1-dev`, `build-essential`, `libssl-dev` и т.д. — полный
+список: https://tauri.app/start/prerequisites/).
 
 ## Проверка типов/сборки фронта
 ```bash
