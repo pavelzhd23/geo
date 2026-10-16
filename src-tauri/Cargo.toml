@@ -1,0 +1,21 @@
+[package]
+name = "map-marker-editor"
+version = "0.1.0"
+description = "Map Marker Editor — разметка OSM-мест"
+edition = "2021"
+
+[lib]
+name = "map_marker_editor_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Версии совпадают с npm-пакетами (^2 → 2.12.x): Tauri CLI проверяет
+# соответствие major/minor crate и @tauri-apps/* и падает при рассинхроне.
+# Требуется rustc >= 1.85 (см. README).
+tauri = { version = "2", features = [] }
+tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
