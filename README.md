@@ -46,23 +46,21 @@ rustup update stable
 
 **Вариант B — сборка на старом rustc (1.75+) без обновления Rust:**
 в `src-tauri/Cargo.toml` зафиксированы версии tauri 2.2.x и пины
-транзитивных зависимостей «до-edition2024» (включая `webkit2gtk =2.0.2`,
-`tauri-build =2.0.5`). Удалите старый lock-файл и пересоберите:
+транзитивных зависимостей «до-edition2024» (включая `cargo_toml =0.21.0`,
+`toml =0.8.23`, `serde_with =3.14.0`, `webkit2gtk =2.0.2`). Удалите старый
+lock-файл и пересоберите:
 
 ```bash
 rm -f src-tauri/Cargo.lock
 npm run tauri build
 ```
 
-Примечание: не ставьте `tauri-cli` через `cargo install` на старом rustc —
-свежие версии CLI требуют rustc >= 1.90. Используйте CLI из npm
-(`@tauri-apps/cli` в dev-зависимостях, вызывается через `npm run tauri …`).
-
-Если появятся новые ошибки `edition2024` на других пакетах — самый надёжный
-путь: получить `Cargo.lock`, собранный на rustc >= 1.85 (например, в Docker:
-`docker run --rm -v $PWD/src-tauri:/app -w /app rust:1.85 cargo generate-lockfile`),
-положить его в `src-tauri/` и закоммитить — тогда cargo всегда будет брать
-совместимые версии.
+Если cargo всё же споткнётся о новый пакет (ошибки вида `feature edition2024
+is required` или `` `resolver` setting `3` is not valid ``), добавьте пин его
+старой совместимой версии в `[dependencies]` Cargo.toml — шаблон ошибки всегда
+показывает имя пакета и требуемый feature. Самый надёжный путь — закоммитить
+`Cargo.lock`, собранный на rustc >= 1.85 (Docker:
+`docker run --rm -v $PWD/src-tauri:/app -w /app rust:1.85 cargo generate-lockfile`).
 
 Для Linux также нужны системные зависимости WebKitGTK
 (`libwebkit2gtk-4.1-dev`, `build-essential`, `libssl-dev` и т.д. — полный
