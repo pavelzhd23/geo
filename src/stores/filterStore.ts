@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { db } from "../services/db";
+import { useCityStore } from "./cityStore";
 
 interface FilterState {
   activeTagId: number | null;
@@ -21,7 +22,9 @@ export const useFilterStore = create<FilterState>((set, get) => ({
       get().clear();
       return;
     }
-    const ids = await db.getPlacesForTagRecursive(tagId);
+    const cityId = useCityStore.getState().currentCityId;
+    if (cityId == null) return;
+    const ids = await db.getPlacesForTagRecursive(tagId, cityId);
     set({ activeTagId: tagId, activeTagName: tagName, matchingIds: new Set(ids) });
   },
 
@@ -31,8 +34,9 @@ export const useFilterStore = create<FilterState>((set, get) => ({
 
   async refresh() {
     const { activeTagId, activeTagName } = get();
-    if (activeTagId == null || activeTagName == null) return;
-    const ids = await db.getPlacesForTagRecursive(activeTagId);
+    const cityId = useCityStore.getState().currentCityId;
+    if (activeTagId == null || activeTagName == null || cityId == null) return;
+    const ids = await db.getPlacesForTagRecursive(activeTagId, cityId);
     set({ matchingIds: new Set(ids) });
   },
 }));
