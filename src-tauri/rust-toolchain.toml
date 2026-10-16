@@ -1,9 +1,0 @@
-# Фиксирует версию Rust для проекта.
-# Нужен rustc >= 1.85: свежие версии транзитивных зависимостей (например,
-# cssparser-macros 0.7.x) используют Cargo resolver = "3", который не
-# понимает rustc 1.75 и вызывает ошибку сборки.
-# Если rustup установлен, просто выполните:
-#   cd src-tauri && rustup toolchain install stable
-# (или `rustup update stable`) — нужная версия подтянется автоматически.
-[toolchain]
-channel = "stable"

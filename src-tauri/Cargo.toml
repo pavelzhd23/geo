@@ -5,8 +5,7 @@ description = "Map Marker Editor — разметка OSM-мест"
 edition = "2021"
 
 # Для rustc < 1.85: запрещаем cargo выбирать транзитивные зависимости,
-# требующие resolver="3" (например, свежие cssparser/serde_derive).
-# На rustc >= 1.85 cargo сам выберет "v3", если он нужен.
+# требующие resolver="3". На rustc >= 1.85 можно удалить эту строку.
 resolver = "1"
 
 [lib]
@@ -17,25 +16,26 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "=2.0.5", features = [] }
 
 [dependencies]
-# Tauri 2.2.x + плагин SQL (проверенная связка). Точные версии 2.2.8/2.0.6
-# были сняты (yanked) с crates.io — используются последние доступные.
-tauri = { version = "^2.2", features = [] }
-tauri-plugin-sql = { version = "^2.0", features = ["sqlite"] }
+# ВАЖНО: точные пины (=). Без них cargo подтянет свежие tauri 2.12/tauri-utils 2.10,
+# которые требуют toml 1.x (edition2024) и не собираются на rustc < 1.85.
+# Версии 2.2.8/2.0.6 были сняты (yanked) с crates.io — используются доступные.
+tauri = { version = "=2.2.5", features = [] }
+tauri-plugin-sql = { version = "=2.0.3", features = ["sqlite"] }
+tauri-utils = "=2.4.0"      # блокирует выборку tauri-utils >=2.7 (toml 0.9/1.x)
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
 # --- Пины транзитивных зависимостей: сборка на rustc < 1.85 ---
-# Cargo старых версий не умеет читать манифесты пакетов с `edition = "2024"`
-# и `resolver = "3"` (например, serde_spanned 1.x, toml 1.x, getrandom 0.3).
+# Старый cargo не умеет читать манифесты пакетов с `edition = "2024"` и
+# `resolver = "3"` (serde_spanned 1.x, toml 1.x, getrandom 0.4+ и др.).
 # Эти пины фиксируют совместимые старые версии для всего дерева зависимостей.
 # На rustc >= 1.85 блок можно удалить целиком (или обновить Rust через rustup).
-cargo_toml = "=0.21.0"    # tauri-build 2.0.5 требует ^0.21; в 0.22+ edition2024
-toml_edit = "=0.22.24"
+getrandom = "=0.3.4"        # 0.4+ требует edition2024; 0.3.4 — rustc 1.63
 handlebars = "=6.3.2"
-plist = "=1.7.0"
-url = "=2.5.4"
+plist = "=1.7.4"
+url = "=2.5.8"
 cssparser = "=0.35.0"
-serde_with = "=3.14.0"
+serde_with = "=3.14.1"
 base64 = "=0.22.1"
 png = "=0.17.16"
 hashbrown = "=0.15.2"
@@ -43,9 +43,6 @@ foldhash = "=0.1.4"
 quick-xml = "=0.37.0"
 cc = "=1.2.16"
 time = "=0.3.36"
-getrandom = "=0.2.16"     # блокирует выборку getrandom 0.3 (rust-version 1.63)
-toml = "=0.8.23"          # блокирует toml 1.x (serde_spanned 1.x, resolver=3)
-
-# Linux: webkit2gtk 2.0.x соответствует системному webkit2gtk-4.1.
-[target.'cfg(target_os = "linux")'.dependencies]
-webkit2gtk = "=2.0.2"
+# toml/toml_edit/cargo_toml/webkit2gtk НЕ пинимся напрямую: tauri/tauri-utils 2.2.x
+# сами выбирают совместные версии (toml 0.8.x, webkit2gtk =2.0.1). Прямые пины
+# вызывали конфликты разрешения ("failed to select a version for ...").
