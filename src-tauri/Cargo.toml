@@ -14,10 +14,24 @@ name = "map_marker_editor_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2", features = [] }
+tauri-build = { version = "=2.0.5", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
-tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+tauri = { version = "=2.2.8", features = [] }
+tauri-plugin-sql = { version = "=2.0.6", features = ["sqlite"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+
+# --- Пины транзитивных зависимостей для сборки на rustc 1.75 (без edition2024) ---
+# Cargo на 1.75 не умеет читать пакеты с `edition = "2024"` (требует rustc >= 1.85).
+# Эти пины нужны, если у вас нет Cargo.lock: они фиксируют версии «до-edition2024».
+# Надёжнее всего закоммитить Cargo.lock из машины, где сборка прошла успешно.
+cargo_toml = "=0.20.5"
+toml_edit = "=0.22.24"
+handlebars = "=6.3.2"
+plist = "=1.7.0"
+url = "=2.5.4"
+cssparser = "=0.35.0"
+soup3 = "=0.5.0"
+javascriptcore-rs = "=1.1.2"
+webkit6 = { version = "=2.1.2", optional = true }

@@ -24,21 +24,43 @@ npm run tauri build  # сборка приложения
 ```
 
 ### Требования к Rust для сборки десктопа
-`npm run tauri build` компилирует `src-tauri` и требует **rustc >= 1.85** (свежие
-транзитивные crate-зависимости, например `cssparser-macros 0.7.x`, используют
-Cargo `resolver = "3"`, который rustc 1.75 не понимает — ошибка
-`` `resolver` setting `3` is not valid ``). Обновите Rust так:
+`npm run tauri build` компилирует `src-tauri`. Рекомендуется **rustc >= 1.85**:
+свежие транзитивные crate-зависимости могут требовать Cargo `resolver = "3"`
+и `edition = "2024"`, которые старый rustc не понимает (ошибки вида
+`` `resolver` setting `3` is not valid `` / `feature edition2024 is required`).
+
+**Вариант A (рекомендуется) — установить rustup через официальный скрипт:**
 
 ```bash
-rustup update stable            # или установите rustup: https://rustup.rs
-cd src-tauri && rustup show     # проверит rust-toolchain.toml и подтянет stable
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+# ВНИМАНИЕ: ~/.cargo/env написан для bash/zsh. Если у вас fish
+# («'case' builtin not inside of switch block»), вместо source "$HOME/.cargo/env"
+# выполните один раз:
+#   cargo env --shell fish >> ~/.config/fish/config.fish
+# и перезапустите терминал.
+rustup update stable
 ```
 
-В `src-tauri/rust-toolchain.toml` зафиксирован канал `stable` — при наличии
-rustup нужная версия выбирается автоматически. Если обновить Rust нельзя,
-можно собрать приложение на более старой связке Tauri (например,
-`cargo install tauri-cli --version "=2.2.5"` на rustc 1.75), но проще
-обновить тулчейн. Также для Linux нужны системные зависимости WebKitGTK
+После этого достаточно `npm run tauri build` (CLI берётся из dev-зависимости
+`@tauri-apps/cli` через npm — отдельно ставить его через cargo не нужно).
+
+**Вариант B — сборка на старом rustc 1.75 без обновления Rust:**
+в `src-tauri/Cargo.toml` зафиксированы версии tauri 2.2.x и пины
+транзитивных зависимостей «до-edition2024». Удалите старый lock-файл и
+пересоберите:
+
+```bash
+rm -f src-tauri/Cargo.lock
+npm run tauri build
+```
+
+Если появятся новые ошибки `edition2024` на других пакетах — самый надёжный
+путь: получить `Cargo.lock`, собранный на rustc >= 1.85 (например, в Docker:
+`docker run --rm -v $PWD/src-tauri:/app -w /app rust:1.85 cargo generate-lockfile`),
+положить его в `src-tauri/` и закоммитить — тогда cargo всегда будет брать
+совместимые версии.
+
+Для Linux также нужны системные зависимости WebKitGTK
 (`libwebkit2gtk-4.1-dev`, `build-essential`, `libssl-dev` и т.д. — полный
 список: https://tauri.app/start/prerequisites/).
 
