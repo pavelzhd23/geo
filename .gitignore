@@ -2,3 +2,7 @@ node_modules/
 dist/
 src-tauri/target/
 *.local
+
+# Ключ Яндекс Карт (локальные переменные окружения)
+.env.local
+.env

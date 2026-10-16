@@ -34,3 +34,21 @@ export interface OsmElement {
   center?: { lat: number; lon: number };
   tags?: Record<string, string>;
 }
+
+/**
+ * Минимальные типы для JavaScript API 2.x Яндекс Карт
+ * (подключается тегом <script> — см. services/yandexMaps.ts).
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type YMapAny = any;
+
+export interface YMapsNamespace {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
+declare global {
+  interface Window {
+    ymaps?: YMapsNamespace;
+  }
+}

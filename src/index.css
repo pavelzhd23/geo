@@ -284,23 +284,25 @@ body,
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* ---------- Markers ---------- */
-.poi-marker-wrap {
-  background: transparent;
-  border: none;
+/* ---------- Map (Yandex Maps) ---------- */
+.ymap-container {
+  position: absolute;
+  inset: 0;
 }
 
-.poi-marker {
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
-}
-
-.poi-marker span {
-  font-size: 16px;
-  line-height: 1;
+.map-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 800;
+  background: #fff;
+  padding: 16px 24px;
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+  max-width: 420px;
+  text-align: center;
 }
 
 /* ---------- Place card ---------- */

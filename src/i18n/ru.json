@@ -1,9 +1,9 @@
 {
   "app.title": "Редактор карт",
   "map.loading": "Загрузка мест…",
-  "map.tooManyMarkers": "Слишком много мест — показаны только первые {{count}}. Приблизьте карту.",
+  "map.noApiKey": "Ключ API не задан. Добавьте VITE_YANDEX_MAPS_API_KEY в файл .env.local и перезапустите приложение.",
+  "map.loadError": "Не удалось загрузить Яндекс Карты. Проверьте ключ API и интернет-соединение.",
   "error.loadPlaces": "Не удалось загрузить места",
-
   "tags.create": "Создать тег",
   "tags.newRoot": "Новый корневой тег",
   "tags.newChild": "Создать дочерний тег",
@@ -16,7 +16,6 @@
   "tags.saved": "Тег сохранён",
   "tags.deleted": "Тег удалён",
   "tags.count": "{{count}} место(ей)",
-
   "place.addTag": "Добавить тег",
   "place.removeTag": "Снять тег",
   "place.noTags": "На этом месте ещё нет ваших тегов",
@@ -30,18 +29,15 @@
   "place.createNew": "Создать новый",
   "place.tagAdded": "Тег добавлен",
   "place.tagRemoved": "Тег снят",
-
   "filter.active": "Фильтр: «{{name}}»",
   "filter.reset": "Сбросить фильтр",
   "filter.noMatches": "В текущей области нет мест с этим тегом",
-
   "selection.mode": "Выделить",
   "selection.exit": "Отмена",
   "selection.createTag": "Создать тег из выделенных ({{count}})",
   "selection.hint": "Кликайте по маркерам, чтобы выделить места",
   "selection.created": "Тег создан, пометки проставлены",
   "selection.empty": "Сначала выделите хотя бы одно место",
-
   "category.restaurant": "Ресторан",
   "category.cafe": "Кафе",
   "category.fast_food": "Фастфуд",

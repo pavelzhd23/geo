@@ -1,28 +1,17 @@
-import { useCallback, useEffect, useState } from "react";
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
-import type { Map as LeafletMap } from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import MarkerLayer from "./MarkerLayer";
 import SelectionMode from "./SelectionMode";
-import { useMapBbox } from "../../hooks/useMapBbox";
+import YMapController from "./YMapController";
+import { useYMapBbox } from "../../hooks/useYMapBbox";
 import { useOverpass } from "../../hooks/useOverpass";
 import { useMapStore } from "../../stores/mapStore";
 import { useFilterStore } from "../../stores/filterStore";
 import { useSelectionStore } from "../../stores/selectionStore";
+import { hasYandexApiKey } from "../../services/yandexMaps";
 import type { Bbox } from "../../types";
 
-const DEFAULT_CENTER: [number, number] = [55.752, 37.6175]; // Москва
-const DEFAULT_ZOOM = 13;
-
-/** Захват ссылки на экземпляр карты. */
-function MapRef({ onReady }: { onReady: (m: LeafletMap) => void }) {
-  const map = useMap();
-  useEffect(() => {
-    onReady(map);
-  }, [map, onReady]);
-  return null;
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type YMapInstance = any;
 
 function FilterBanner() {
   const { t } = useTranslation();
@@ -42,9 +31,13 @@ function FilterBanner() {
 
 export default function MapView() {
   const { t } = useTranslation();
-  const [map, setMap] = useState<LeafletMap | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [map, setMap] = useState<YMapInstance>(null);
+  const [failed, setFailed] = useState(false);
   const loading = useMapStore((s) => s.loading);
   const selectionMode = useSelectionStore((s) => s.mode);
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const { load } = useOverpass();
 
   const handleBbox = useCallback(
@@ -54,7 +47,7 @@ export default function MapView() {
     [load]
   );
 
-  useMapBbox(map, handleBbox);
+  useYMapBbox(map, handleBbox);
 
   // Выход из режима выделения по Escape
   useEffect(() => {
@@ -66,22 +59,27 @@ export default function MapView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [selectionMode]);
 
+  // Нет ключа API — понятное сообщение вместо пустой карты
+  if (!hasYandexApiKey()) {
+    return (
+      <div className="map-wrap">
+        <div className="map-message">{t("map.noApiKey")}</div>
+      </div>
+    );
+  }
+
   return (
     <div className={`map-wrap ${selectionMode ? "map-wrap-selection" : ""}`}>
-      <MapContainer
-        center={DEFAULT_CENTER}
-        zoom={DEFAULT_ZOOM}
-        style={{ width: "100%", height: "100%" }}
-        zoomControl
-      >
-        <TileLayer
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          maxZoom={19}
+      <div ref={containerRef} className="ymap-container" />
+      {!failed && (
+        <YMapController
+          containerRef={containerRef}
+          onReady={setMap}
+          onError={() => setFailed(true)}
         />
-        <MapRef onReady={setMap} />
-        <MarkerLayer />
-      </MapContainer>
+      )}
+
+      {failed && <div className="map-message">{t("map.loadError")}</div>}
 
       <div className="map-controls">
         <SelectionMode />
