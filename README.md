@@ -44,15 +44,19 @@ rustup update stable
 После этого достаточно `npm run tauri build` (CLI берётся из dev-зависимости
 `@tauri-apps/cli` через npm — отдельно ставить его через cargo не нужно).
 
-**Вариант B — сборка на старом rustc 1.75 без обновления Rust:**
+**Вариант B — сборка на старом rustc (1.75+) без обновления Rust:**
 в `src-tauri/Cargo.toml` зафиксированы версии tauri 2.2.x и пины
-транзитивных зависимостей «до-edition2024». Удалите старый lock-файл и
-пересоберите:
+транзитивных зависимостей «до-edition2024» (включая `webkit2gtk =2.0.2`,
+`tauri-build =2.0.5`). Удалите старый lock-файл и пересоберите:
 
 ```bash
 rm -f src-tauri/Cargo.lock
 npm run tauri build
 ```
+
+Примечание: не ставьте `tauri-cli` через `cargo install` на старом rustc —
+свежие версии CLI требуют rustc >= 1.90. Используйте CLI из npm
+(`@tauri-apps/cli` в dev-зависимостях, вызывается через `npm run tauri …`).
 
 Если появятся новые ошибки `edition2024` на других пакетах — самый надёжный
 путь: получить `Cargo.lock`, собранный на rustc >= 1.85 (например, в Docker:
