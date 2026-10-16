@@ -12,22 +12,21 @@ const API_KEY = import.meta.env.VITE_YANDEX_MAPS_API_KEY as string | undefined;
 /** Язык/регион карт по умолчанию. */
 const DEFAULT_LOCALE = "ru_RU";
 
-/**
- * URL JavaScript API 2.x Яндекс Карт.
- * Без параметра `apikey` API отдаёт карту по бесплатному открытому доступу.
- * Параметр `mode` (development / release / production) можно переопределить
- * через VITE_YANDEX_MAPS_MODE.
- */
-function buildScriptSrc(): string {
+const READY_TIMEOUT_MS = 15000;
+
+/** URL загрузки с альтернативным хостом (api-maps.yandex.ru блокируется в некоторых регионах). */
+function buildScriptSrc(host: string): string {
   const mode = (import.meta.env.VITE_YANDEX_MAPS_MODE as string | undefined) ?? "release";
   const keyParam = API_KEY ? `&apikey=${encodeURIComponent(API_KEY)}` : "";
   return (
-    `https://api-maps.yandex.ru/2.1/` +
+    `https://${host}/2.1/` +
     `?lang=${DEFAULT_LOCALE.replace("_", "-")}` +
     `${keyParam}` +
     `&mode=${mode}`
   );
 }
+
+const HOSTS = ["api-maps.yandex.ru", "api-maps-webcdn.yandex.net"];
 
 let readyPromise: Promise<YMapsNamespace> | null = null;
 
@@ -36,55 +35,84 @@ export function hasYandexApiKey(): boolean {
   return Boolean(API_KEY);
 }
 
+/** Подключает скрипт с указанного хоста; промис резолвится на событии load. */
+function injectScript(src: string): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.defer = true;
+    script.setAttribute("data-yandex-maps", "");
+    script.addEventListener("load", () => resolve());
+    script.addEventListener("error", () => {
+      script.remove();
+      reject(new Error(`Failed to load ${src}`));
+    });
+    document.head.appendChild(script);
+  });
+}
+
+/** Ждём появления window.ymaps и события ymaps.ready (с таймаутом). */
+function waitForNamespace(): Promise<YMapsNamespace> {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
+    const tryReady = () => {
+      const ymaps = window.ymaps;
+      if (ymaps && typeof ymaps.ready === "function") {
+        let done = false;
+        try {
+          ymaps.ready(() => {
+            if (!done) {
+              done = true;
+              resolve(ymaps);
+            }
+          });
+        } catch (err) {
+          reject(err);
+          return;
+        }
+      }
+      if (Date.now() - start > READY_TIMEOUT_MS) {
+        reject(new Error("Yandex Maps did not become ready in time"));
+        return;
+      }
+      window.setTimeout(tryReady, 200);
+    };
+    tryReady();
+  });
+}
+
 /**
  * Однократно подключает скрипт Яндекс Карт и возвращает namespace `ymaps`
  * после события ready (промис кэшируется). Ключ API не требуется —
  * используется бесплатный открытый доступ.
+ * Пробует несколько хостов: api-maps.yandex.ru недоступен в ряде регионов,
+ * но тот же API отдаётся с api-maps-webcdn.yandex.net.
  */
 export function getYMaps(): Promise<YMapsNamespace> {
   if (readyPromise) return readyPromise;
 
-  readyPromise = new Promise<YMapsNamespace>((resolve, reject) => {
+  readyPromise = (async () => {
     // уже загружен ранее (например, при hot-reload)
     if (window.ymaps?.Map && typeof window.ymaps.ready === "function") {
-      window.ymaps.ready(() => resolve(window.ymaps as YMapsNamespace));
-      return;
+      return waitForNamespace();
     }
 
-    const existing = document.querySelector<HTMLScriptElement>(
-      "script[data-yandex-maps]"
-    );
-    const script = existing ?? document.createElement("script");
-
-    const onLoad = () => {
-      const ymaps = window.ymaps;
-      if (!ymaps || typeof ymaps.ready !== "function") {
-        reject(new Error("ymaps namespace not found after script load"));
-        return;
-      }
+    let lastError: unknown = null;
+    for (const host of HOSTS) {
       try {
-        ymaps.ready(() => resolve(ymaps as YMapsNamespace));
+        await injectScript(buildScriptSrc(host));
+        return await waitForNamespace();
       } catch (err) {
-        reject(err);
+        lastError = err;
+        console.warn(`[yandexMaps] host ${host} failed, trying next`, err);
       }
-    };
-    const onFail = () => {
-      readyPromise = null;
-      reject(new Error("Failed to load Yandex Maps script"));
-    };
-
-    script.addEventListener("load", onLoad);
-    script.addEventListener("error", onFail);
-
-    if (!existing) {
-      script.src = buildScriptSrc();
-      script.async = true;
-      script.defer = true;
-      script.setAttribute("data-yandex-maps", "");
-      document.head.appendChild(script);
-    } else if (window.ymaps) {
-      onLoad();
     }
+    throw lastError ?? new Error("Failed to load Yandex Maps script");
+  })().catch((err) => {
+    // позвольем повторную попытку после перезагрузки страницы/ошибки
+    readyPromise = null;
+    throw err;
   });
 
   return readyPromise;

@@ -73,7 +73,14 @@ export default function MapView() {
         />
       )}
 
-      {failed && <div className="map-message">{t("map.loadError")}</div>}
+      {failed && (
+        <div className="map-message">
+          {t("map.loadError")}
+          <button className="btn btn-small" onClick={() => window.location.reload()}>
+            {t("map.retry")}
+          </button>
+        </div>
+      )}
 
       {noteVisible && !failed && (
         <div className="map-note">
