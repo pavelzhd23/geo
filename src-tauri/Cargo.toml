@@ -4,6 +4,11 @@ version = "0.1.0"
 description = "Map Marker Editor — разметка OSM-мест"
 edition = "2021"
 
+# Для rustc < 1.85: запрещаем cargo выбирать транзитивные зависимости,
+# требующие resolver="3" (например, свежие cssparser/serde_derive).
+# На rustc >= 1.85 cargo сам выберет "v3", если он нужен.
+resolver = "1"
+
 [lib]
 name = "map_marker_editor_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
